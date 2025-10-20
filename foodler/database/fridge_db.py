@@ -1,9 +1,8 @@
 """Fridge inventory database management."""
 
 from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from datetime import datetime
+from sqlalchemy.orm import declarative_base, sessionmaker
+from datetime import datetime, timezone
 
 Base = declarative_base()
 
@@ -22,7 +21,7 @@ class FoodItem(Base):
     protein = Column(Float)
     carbs = Column(Float)
     fats = Column(Float)
-    added_date = Column(DateTime, default=datetime.utcnow)
+    added_date = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     
     def __repr__(self):
         return f"<FoodItem(name='{self.name}', quantity={self.quantity} {self.unit})>"
@@ -134,10 +133,11 @@ class FridgeDatabase:
             List of FoodItem objects expiring within the specified days
         """
         from datetime import timedelta
-        future_date = datetime.utcnow() + timedelta(days=days)
+        now = datetime.now(timezone.utc)
+        future_date = now + timedelta(days=days)
         return self.session.query(FoodItem).filter(
             FoodItem.expiry_date <= future_date,
-            FoodItem.expiry_date >= datetime.utcnow()
+            FoodItem.expiry_date >= now
         ).all()
     
     def close(self):

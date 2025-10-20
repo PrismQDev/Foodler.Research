@@ -232,8 +232,7 @@ def calculate_meal():
     for i, item in enumerate(items, 1):
         click.echo(f"{i}. {item.name} ({item.quantity} {item.unit})")
     
-    click.echo("\nSelect items for your meal (comma-separated numbers):")
-    selection = input("> ")
+    selection = click.prompt("\nSelect items for your meal (comma-separated numbers)", type=str)
     
     try:
         indices = [int(x.strip()) - 1 for x in selection.split(',')]
@@ -246,9 +245,8 @@ def calculate_meal():
     # Get quantities
     foods = []
     for item in selected_items:
-        click.echo(f"\nHow much {item.name} (in grams)?")
         try:
-            qty = float(input("> "))
+            qty = click.prompt(f"\nHow much {item.name} (in grams)?", type=float)
             foods.append({
                 'name': item.name,
                 'quantity': qty,
@@ -257,7 +255,7 @@ def calculate_meal():
                 'carbs': item.carbs or 0,
                 'fats': item.fats or 0
             })
-        except ValueError:
+        except (ValueError, click.Abort):
             click.echo(f"Invalid quantity, skipping {item.name}")
     
     if foods:

@@ -1,6 +1,6 @@
 """Nutrition calculator for balanced food intake."""
 
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 from datetime import datetime
 
 
@@ -74,7 +74,7 @@ class NutritionCalculator:
         
         return self.daily_needs
     
-    def calculate_meal_balance(self, foods: List[Dict[str, any]]) -> Dict[str, any]:
+    def calculate_meal_balance(self, foods: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Calculate nutritional balance of a meal.
         
         Args:

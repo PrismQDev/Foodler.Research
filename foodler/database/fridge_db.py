@@ -1,8 +1,8 @@
 """Fridge inventory database management."""
 
-from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime
+from sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, Date
 from sqlalchemy.orm import declarative_base, sessionmaker
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 
 Base = declarative_base()
 
@@ -16,7 +16,8 @@ class FoodItem(Base):
     name = Column(String, nullable=False)
     quantity = Column(Float, nullable=False)
     unit = Column(String, nullable=False)
-    last_used_date = Column(DateTime)
+    last_used_meal_date = Column(Date)  # Date when last used
+    last_used_meal_number = Column(Integer)  # Meal number (1=Breakfast, 2=Lunch, 3=Dinner, etc.)
     meals_without = Column(Integer, default=0)
     calories = Column(Float)
     protein = Column(Float)
@@ -26,6 +27,15 @@ class FoodItem(Base):
     
     def __repr__(self):
         return f"<FoodItem(name='{self.name}', quantity={self.quantity} {self.unit})>"
+    
+    @property
+    def last_used_meal(self):
+        """Get combined last used meal info as string."""
+        if self.last_used_meal_date and self.last_used_meal_number:
+            meal_names = {1: "Breakfast", 2: "Lunch", 3: "Dinner", 4: "Snack"}
+            meal_name = meal_names.get(self.last_used_meal_number, f"Meal {self.last_used_meal_number}")
+            return f"{self.last_used_meal_date.strftime('%Y-%m-%d')} {meal_name}"
+        return "Never used"
 
 
 class FridgeDatabase:
@@ -128,7 +138,8 @@ class FridgeDatabase:
         
         Returns items sorted by:
         1. Number of meals without using it (descending)
-        2. Last used date (oldest first, never used items first)
+        2. Last used meal date (oldest first, never used items first)
+        3. Last used meal number (earlier meals first)
         
         Args:
             limit: Maximum number of items to return
@@ -138,23 +149,28 @@ class FridgeDatabase:
         """
         return self.session.query(FoodItem).order_by(
             FoodItem.meals_without.desc(),
-            FoodItem.last_used_date.asc().nullsfirst()
+            FoodItem.last_used_meal_date.asc().nullsfirst(),
+            FoodItem.last_used_meal_number.asc().nullsfirst()
         ).limit(limit).all()
     
-    def mark_as_used(self, item_id):
+    def mark_as_used(self, item_id, meal_number=None):
         """Mark an item as used in a meal.
         
-        This updates the last_used_date to now and resets meals_without to 0.
+        This updates the last_used_meal_date to today, sets the meal number,
+        and resets meals_without to 0.
         
         Args:
             item_id: ID of the item that was used
+            meal_number: Meal number (1=Breakfast, 2=Lunch, 3=Dinner, 4=Snack, etc.)
+                        If None, defaults to 1 (Breakfast)
             
         Returns:
             The updated FoodItem object or None if not found
         """
         item = self.session.query(FoodItem).filter(FoodItem.id == item_id).first()
         if item:
-            item.last_used_date = datetime.now(timezone.utc)
+            item.last_used_meal_date = date.today()
+            item.last_used_meal_number = meal_number if meal_number is not None else 1
             item.meals_without = 0
             self.session.commit()
         return item

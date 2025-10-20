@@ -79,7 +79,11 @@ python main.py fridge cycle
 
 Mark an item as used in a meal:
 ```bash
+# Default (Breakfast)
 python main.py fridge used <item_id>
+
+# Specify meal: 1=Breakfast, 2=Lunch, 3=Dinner, 4=Snack
+python main.py fridge used <item_id> --meal 2
 ```
 
 Remove an item:
@@ -144,7 +148,7 @@ Foodler.Research/
 
 ### 1. Fridge Inventory Database
 - Store food items with quantities and units
-- Track last used dates
+- Track last used meal (date + meal number: Breakfast=1, Lunch=2, Dinner=3, Snack=4)
 - Track meals without using each item
 - Store nutritional information
 - Get cycling priority to help rotate through food

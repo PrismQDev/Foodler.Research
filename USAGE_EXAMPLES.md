@@ -59,16 +59,27 @@ This shows items prioritized by:
 1. Items with the most meals without using them
 2. Items that haven't been used in the longest time
 
-When you use an item in a meal, mark it:
+When you use an item in a meal, mark it with the meal number:
 
 ```bash
+# Breakfast (default, meal 1)
 python main.py fridge used 2
+
+# Lunch (meal 2)
+python main.py fridge used 2 --meal 2
+
+# Dinner (meal 3)
+python main.py fridge used 2 --meal 3
+
+# Snack (meal 4)
+python main.py fridge used 2 --meal 4
 ```
 
 Output:
 ```
-Marked Chicken breast as used!
-Last used date updated and meals_without reset to 0.
+Marked Chicken breast as used in Lunch!
+Last used meal: 2025-10-20 Lunch
+Meals without reset to 0.
 ```
 
 Then increment the counter for items not used (via Python API):
@@ -79,7 +90,7 @@ db.increment_meals_without(exclude_ids=[2])  # Exclude chicken (ID 2)
 db.close()
 ```
 
-This helps you rotate through all your food items evenly.
+This helps you rotate through all your food items evenly, tracking exactly which meal of which day each item was last used.
 
 ## Calculating Your Nutritional Needs
 

@@ -55,15 +55,15 @@ def main():
     print("\n3. Items to use next (cycling priority):")
     items_to_use = db.get_items_to_use(limit=5)
     for item in items_to_use:
-        last_used = item.last_used_date.strftime('%Y-%m-%d') if item.last_used_date else 'Never used'
-        print(f"   - {item.name} (last used: {last_used}, meals without: {item.meals_without})")
+        print(f"   - {item.name} (last used: {item.last_used_meal}, meals without: {item.meals_without})")
     
-    # 4b. Simulate using an item
-    print("\n   Simulating meal preparation...")
+    # 4b. Simulate using an item in breakfast
+    print("\n   Simulating breakfast preparation...")
     if items:
         chicken = items[0]  # Use the first item (chicken)
-        db.mark_as_used(chicken.id)
-        print(f"   Marked {chicken.name} as used")
+        db.mark_as_used(chicken.id, meal_number=1)  # 1 = Breakfast
+        print(f"   Marked {chicken.name} as used in Breakfast")
+        print(f"   Last used meal: {chicken.last_used_meal}")
         
         # Increment meals_without for items not used
         db.increment_meals_without(exclude_ids=[chicken.id])

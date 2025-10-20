@@ -62,9 +62,8 @@ def fridge_list():
     
     click.echo("\n=== Fridge Inventory ===\n")
     for item in items:
-        last_used = item.last_used_date.strftime('%Y-%m-%d') if item.last_used_date else 'Never'
         click.echo(f"[{item.id}] {item.name}: {item.quantity} {item.unit}")
-        click.echo(f"    Last used: {last_used} | Meals without: {item.meals_without}")
+        click.echo(f"    Last used: {item.last_used_meal} | Meals without: {item.meals_without}")
         if item.calories:
             click.echo(f"    Nutrition: {item.calories} kcal, "
                       f"P: {item.protein}g, C: {item.carbs}g, F: {item.fats}g")
@@ -86,9 +85,8 @@ def fridge_cycle(limit):
     
     click.echo(f"\n=== Items to Use Next (Cycling Priority) ===\n")
     for item in items:
-        last_used = item.last_used_date.strftime('%Y-%m-%d') if item.last_used_date else 'Never used'
         click.echo(f"[{item.id}] {item.name}: {item.quantity} {item.unit}")
-        click.echo(f"    Last used: {last_used} | Meals without: {item.meals_without}")
+        click.echo(f"    Last used: {item.last_used_meal} | Meals without: {item.meals_without}")
         click.echo()
     
     db.close()
@@ -96,14 +94,19 @@ def fridge_cycle(limit):
 
 @fridge.command('used')
 @click.argument('item_id', type=int)
-def fridge_used(item_id):
+@click.option('--meal', type=int, default=1, help='Meal number (1=Breakfast, 2=Lunch, 3=Dinner, 4=Snack)')
+def fridge_used(item_id, meal):
     """Mark an item as used in a meal."""
     db = FridgeDatabase()
     
-    item = db.mark_as_used(item_id)
+    meal_names = {1: "Breakfast", 2: "Lunch", 3: "Dinner", 4: "Snack"}
+    meal_name = meal_names.get(meal, f"Meal {meal}")
+    
+    item = db.mark_as_used(item_id, meal)
     if item:
-        click.echo(f"Marked {item.name} as used!")
-        click.echo(f"Last used date updated and meals_without reset to 0.")
+        click.echo(f"Marked {item.name} as used in {meal_name}!")
+        click.echo(f"Last used meal: {item.last_used_meal}")
+        click.echo(f"Meals without reset to 0.")
     else:
         click.echo(f"Item {item_id} not found")
     

@@ -8,13 +8,13 @@ First, add some items to your fridge:
 
 ```bash
 # Add fresh produce
-python main.py fridge add "Tomatoes" 500 g --expiry 2025-10-25 --calories 18 --protein 0.9 --carbs 3.9 --fats 0.2
+python main.py fridge add "Tomatoes" 500 g --calories 18 --protein 0.9 --carbs 3.9 --fats 0.2
 
 # Add protein sources
-python main.py fridge add "Chicken breast" 600 g --expiry 2025-10-23 --calories 165 --protein 31 --carbs 0 --fats 3.6
+python main.py fridge add "Chicken breast" 600 g --calories 165 --protein 31 --carbs 0 --fats 3.6
 
 # Add dairy
-python main.py fridge add "Milk" 1000 ml --expiry 2025-10-22 --calories 42 --protein 3.4 --carbs 5 --fats 1
+python main.py fridge add "Milk" 1000 ml --calories 42 --protein 3.4 --carbs 5 --fats 1
 
 # Add grains
 python main.py fridge add "Brown rice" 1000 g --calories 370 --protein 7.9 --carbs 77 --fats 2.9
@@ -31,29 +31,55 @@ Output:
 === Fridge Inventory ===
 
 [1] Tomatoes: 500.0 g
-    Expiry: 2025-10-25
+    Last used: Never | Meals without: 0
     Nutrition: 18.0 kcal, P: 0.9g, C: 3.9g, F: 0.2g
 
 [2] Chicken breast: 600.0 g
-    Expiry: 2025-10-23
+    Last used: Never | Meals without: 0
     Nutrition: 165.0 kcal, P: 31.0g, C: 0.0g, F: 3.6g
 
 [3] Milk: 1000.0 ml
-    Expiry: 2025-10-22
+    Last used: Never | Meals without: 0
     Nutrition: 42.0 kcal, P: 3.4g, C: 5.0g, F: 1.0g
 
 [4] Brown rice: 1000.0 g
-    Expiry: N/A
+    Last used: Never | Meals without: 0
     Nutrition: 370.0 kcal, P: 7.9g, C: 77.0g, F: 2.9g
 ```
 
-### 3. Check Expiring Items
+### 3. Cycling Through Food Items
+
+Check which items should be used next to cycle through your inventory:
 
 ```bash
-python main.py fridge expiring --days 7
+python main.py fridge cycle
 ```
 
-This will show all items expiring within the next 7 days.
+This shows items prioritized by:
+1. Items with the most meals without using them
+2. Items that haven't been used in the longest time
+
+When you use an item in a meal, mark it:
+
+```bash
+python main.py fridge used 2
+```
+
+Output:
+```
+Marked Chicken breast as used!
+Last used date updated and meals_without reset to 0.
+```
+
+Then increment the counter for items not used (via Python API):
+```python
+from foodler.database import FridgeDatabase
+db = FridgeDatabase()
+db.increment_meals_without(exclude_ids=[2])  # Exclude chicken (ID 2)
+db.close()
+```
+
+This helps you rotate through all your food items evenly.
 
 ## Calculating Your Nutritional Needs
 
@@ -257,31 +283,39 @@ db.close()
 ## Tips and Best Practices
 
 1. **Keep Your Inventory Updated**: Regularly update quantities as you use items
-2. **Add Expiry Dates**: This helps prevent food waste
-3. **Use Accurate Nutritional Data**: Look up values in kaloricke tabulky for Czech foods
-4. **Plan Your Meals**: Use the meal calculator to ensure balanced nutrition
-5. **Check Expiring Items Daily**: Use `fridge expiring` to plan meals around items that need to be used soon
+2. **Mark Items as Used**: Use `fridge used <id>` when you prepare meals to track usage
+3. **Cycle Through Food**: Check `fridge cycle` to see which items need to be used
+4. **Use Accurate Nutritional Data**: Look up values in kaloricke tabulky for Czech foods
+5. **Plan Your Meals**: Use the meal calculator to ensure balanced nutrition
 6. **Track Your Progress**: Calculate your needs and monitor if you're meeting them
 
 ## Common Workflows
 
 ### Workflow 1: Weekly Grocery Shopping
 
-1. Check what's expiring: `python main.py fridge expiring --days 7`
-2. Plan meals around expiring items
+1. Check cycling priority: `python main.py fridge cycle`
+2. Plan meals around items that haven't been used
 3. Check for discounts: `python main.py discounts list`
 4. Create shopping list based on meal plan
 5. Add new items after shopping
 
-### Workflow 2: Daily Meal Planning
+### Workflow 2: Daily Meal Planning with Cycling
 
 1. Calculate your daily needs (do once)
-2. Check fridge inventory: `python main.py fridge list`
-3. Plan breakfast using meal calculator
-4. Plan lunch using remaining needs
-5. Plan dinner to complete daily requirements
+2. Check cycling priority: `python main.py fridge cycle`
+3. Use items with highest "meals_without" count first
+4. Mark items as used after preparing meal
+5. Increment meals_without for unused items
 
-### Workflow 3: Using Discounts Effectively
+### Workflow 3: Rotating Food Inventory
+
+1. Check items: `python main.py fridge list`
+2. Identify items with high "meals without" count
+3. Plan next meal using those items
+4. Mark them as used: `python main.py fridge used <id>`
+5. Update meals_without counters via API
+
+### Workflow 4: Using Discounts Effectively
 
 1. Browse current discounts
 2. Look up nutritional values for discounted items

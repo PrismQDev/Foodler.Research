@@ -19,7 +19,6 @@ def main():
         name="Chicken breast",
         quantity=600,
         unit="g",
-        expiry_date=datetime.now() + timedelta(days=3),
         calories=165,
         protein=31,
         carbs=0,
@@ -40,7 +39,6 @@ def main():
         name="Broccoli",
         quantity=400,
         unit="g",
-        expiry_date=datetime.now() + timedelta(days=2),
         calories=34,
         protein=2.8,
         carbs=7,
@@ -53,12 +51,23 @@ def main():
     for item in items:
         print(f"   - {item.name}: {item.quantity} {item.unit}")
     
-    # 4. Check expiring items
-    print("\n3. Items expiring soon:")
-    expiring = db.get_expiring_soon(days=3)
-    for item in expiring:
-        days_left = (item.expiry_date - datetime.now()).days
-        print(f"   - {item.name} expires in {days_left} days")
+    # 4. Check items to cycle through
+    print("\n3. Items to use next (cycling priority):")
+    items_to_use = db.get_items_to_use(limit=5)
+    for item in items_to_use:
+        last_used = item.last_used_date.strftime('%Y-%m-%d') if item.last_used_date else 'Never used'
+        print(f"   - {item.name} (last used: {last_used}, meals without: {item.meals_without})")
+    
+    # 4b. Simulate using an item
+    print("\n   Simulating meal preparation...")
+    if items:
+        chicken = items[0]  # Use the first item (chicken)
+        db.mark_as_used(chicken.id)
+        print(f"   Marked {chicken.name} as used")
+        
+        # Increment meals_without for items not used
+        db.increment_meals_without(exclude_ids=[chicken.id])
+        print(f"   Incremented meals_without counter for unused items")
     
     # 5. Calculate personalized nutritional needs
     print("\n4. Calculating nutritional needs...")

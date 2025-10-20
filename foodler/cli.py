@@ -28,28 +28,18 @@ def fridge():
 @click.argument('name')
 @click.argument('quantity', type=float)
 @click.argument('unit')
-@click.option('--expiry', help='Expiry date (YYYY-MM-DD)')
 @click.option('--calories', type=float, help='Calories per unit')
 @click.option('--protein', type=float, help='Protein per unit')
 @click.option('--carbs', type=float, help='Carbs per unit')
 @click.option('--fats', type=float, help='Fats per unit')
-def fridge_add(name, quantity, unit, expiry, calories, protein, carbs, fats):
+def fridge_add(name, quantity, unit, calories, protein, carbs, fats):
     """Add item to fridge inventory."""
     db = FridgeDatabase()
-    
-    expiry_date = None
-    if expiry:
-        try:
-            expiry_date = datetime.strptime(expiry, '%Y-%m-%d')
-        except ValueError:
-            click.echo("Invalid date format. Use YYYY-MM-DD")
-            return
     
     item = db.add_item(
         name=name,
         quantity=quantity,
         unit=unit,
-        expiry_date=expiry_date,
         calories=calories,
         protein=protein,
         carbs=carbs,
@@ -72,9 +62,9 @@ def fridge_list():
     
     click.echo("\n=== Fridge Inventory ===\n")
     for item in items:
-        expiry = item.expiry_date.strftime('%Y-%m-%d') if item.expiry_date else 'N/A'
+        last_used = item.last_used_date.strftime('%Y-%m-%d') if item.last_used_date else 'Never'
         click.echo(f"[{item.id}] {item.name}: {item.quantity} {item.unit}")
-        click.echo(f"    Expiry: {expiry}")
+        click.echo(f"    Last used: {last_used} | Meals without: {item.meals_without}")
         if item.calories:
             click.echo(f"    Nutrition: {item.calories} kcal, "
                       f"P: {item.protein}g, C: {item.carbs}g, F: {item.fats}g")
@@ -83,21 +73,39 @@ def fridge_list():
     db.close()
 
 
-@fridge.command('expiring')
-@click.option('--days', default=7, help='Number of days to look ahead')
-def fridge_expiring(days):
-    """Show items expiring soon."""
+@fridge.command('cycle')
+@click.option('--limit', default=10, help='Number of items to show')
+def fridge_cycle(limit):
+    """Show items that should be used soon to cycle through inventory."""
     db = FridgeDatabase()
-    items = db.get_expiring_soon(days)
+    items = db.get_items_to_use(limit)
     
     if not items:
-        click.echo(f"No items expiring in the next {days} days.")
+        click.echo("No items in fridge!")
         return
     
-    click.echo(f"\n=== Items Expiring in {days} Days ===\n")
+    click.echo(f"\n=== Items to Use Next (Cycling Priority) ===\n")
     for item in items:
-        expiry = item.expiry_date.strftime('%Y-%m-%d')
-        click.echo(f"{item.name}: {item.quantity} {item.unit} (expires: {expiry})")
+        last_used = item.last_used_date.strftime('%Y-%m-%d') if item.last_used_date else 'Never used'
+        click.echo(f"[{item.id}] {item.name}: {item.quantity} {item.unit}")
+        click.echo(f"    Last used: {last_used} | Meals without: {item.meals_without}")
+        click.echo()
+    
+    db.close()
+
+
+@fridge.command('used')
+@click.argument('item_id', type=int)
+def fridge_used(item_id):
+    """Mark an item as used in a meal."""
+    db = FridgeDatabase()
+    
+    item = db.mark_as_used(item_id)
+    if item:
+        click.echo(f"Marked {item.name} as used!")
+        click.echo(f"Last used date updated and meals_without reset to 0.")
+    else:
+        click.echo(f"Item {item_id} not found")
     
     db.close()
 

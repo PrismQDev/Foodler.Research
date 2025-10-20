@@ -5,7 +5,8 @@ An application for calculating balanced food intake from your fridge inventory, 
 ## Overview
 
 Foodler helps you:
-- 🥗 Manage your fridge inventory with expiry tracking
+- 🥗 Manage your fridge inventory with usage tracking
+- 🔄 Cycle through food items to avoid waste
 - 💰 Find food discounts from kupi.cz
 - 📊 Get nutritional information from kaloricke tabulky
 - ⚖️ Calculate balanced food intake based on your needs
@@ -62,8 +63,8 @@ pip install -r requirements.txt
 
 Add items to your fridge:
 ```bash
-python main.py fridge add "Chicken breast" 500 g --expiry 2025-10-25 --calories 165 --protein 31 --carbs 0 --fats 3.6
-python main.py fridge add "Broccoli" 300 g --expiry 2025-10-22 --calories 34 --protein 2.8 --carbs 7 --fats 0.4
+python main.py fridge add "Chicken breast" 500 g --calories 165 --protein 31 --carbs 0 --fats 3.6
+python main.py fridge add "Broccoli" 300 g --calories 34 --protein 2.8 --carbs 7 --fats 0.4
 ```
 
 List all items:
@@ -71,9 +72,14 @@ List all items:
 python main.py fridge list
 ```
 
-Check items expiring soon:
+Check which items to use next (cycling priority):
 ```bash
-python main.py fridge expiring --days 7
+python main.py fridge cycle
+```
+
+Mark an item as used in a meal:
+```bash
+python main.py fridge used <item_id>
 ```
 
 Remove an item:
@@ -138,9 +144,10 @@ Foodler.Research/
 
 ### 1. Fridge Inventory Database
 - Store food items with quantities and units
-- Track expiry dates
+- Track last used dates
+- Track meals without using each item
 - Store nutritional information
-- Get alerts for expiring items
+- Get cycling priority to help rotate through food
 
 ### 2. Discount Scraper (kupi.cz)
 - Browse current food discounts

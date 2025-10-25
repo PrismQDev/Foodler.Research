@@ -4,7 +4,7 @@ from typing import List, Dict, Optional
 import logging
 
 try:
-    from kupiapi import Kupi
+    from kupiapi.scraper import KupiScraper as KupiApiScraper
     KUPIAPI_AVAILABLE = True
 except ImportError:
     KUPIAPI_AVAILABLE = False
@@ -26,7 +26,7 @@ class KupiScraper:
                 "kupiapi library is required. Install with: pip install kupiapi"
             )
         
-        self.kupi = Kupi()
+        self.kupi = KupiApiScraper()
         logger.info("KupiScraper initialized with kupiapi library")
     
     def get_discounts(self, category: Optional[str] = None) -> List[Dict[str, str]]:

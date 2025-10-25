@@ -12,29 +12,137 @@ This document provides comprehensive research on available APIs for nutrition da
 
 ## Nutrition APIs (Kalorické Tabuľky)
 
-### 1. KalorickeTabulky.cz (Unofficial API)
+### 1. KalorickeTabulky.cz (Unofficial API/Scraper)
 
-**Type:** Unofficial scraper/API  
-**Language:** JavaScript/Node.js  
-**Cost:** Free (open source)  
-**Coverage:** Czech/Slovak nutrition data
+**Type:** Unofficial API/Web Scraper  
+**Language:** JavaScript/Node.js/TypeScript (community libraries), Python (scraper available)  
+**Cost:** Free (open source community tools)  
+**Coverage:** Czech/Slovak nutrition data - comprehensive local database
 
-**Features:**
-- Login functionality
-- Weight recording and tracking
-- Fetching recorded weights
-- Basic user data management
+**Official Status:**
+- **No official public API** - All access is via reverse-engineered endpoints or web scraping
+- May violate Terms of Service - use at your own risk
+- Subject to breaking changes when website updates
 
-**Limitations:**
-- Does not officially provide food nutrition data endpoints
-- May require web scraping or API extension for full nutrition tables
-- Unofficial implementation (may break if website changes)
+#### Available Tools & Libraries
 
-**Resources:**
-- GitHub: https://github.com/TomasHubelbauer/kaloricke-tabulky-api
-- Documentation: https://tomashubelbauer.github.io/kaloricke-tabulky-api/
+**1. TomasHubelbauer/kaloricke-tabulky-api (Node.js)**
+- **Language:** JavaScript/Node.js (dependency-free)
+- **Features:**
+  - Login with session management (requires hashed password from browser)
+  - Weight recording and tracking
+  - Fetching recorded weights
+  - Basic user data management
+- **GitHub:** https://github.com/TomasHubelbauer/kaloricke-tabulky-api
+- **Documentation:** https://tomashubelbauer.github.io/kaloricke-tabulky-api/
 
-**Python Integration:** Would require porting or using Node.js subprocess
+**2. francbohuslav/kaloricke-tabulky-api (TypeScript)**
+- **Language:** TypeScript
+- **Features:**
+  - REST API client (`Client` class)
+  - Czech command interpreter (`Commander` class)
+  - Direct API interaction
+  - More comprehensive than TomasHubelbauer's version
+- **Installation:** `npm i francbohuslav/kaloricke-tabulky-api`
+- **GitHub:** https://github.com/francbohuslav/kaloricke-tabulky-api
+
+**3. jimrs/kaloricketabulky-scraper (Python)**
+- **Language:** Python
+- **Type:** Full database scraper
+- **Features:**
+  - Download entire kaloricketabulky.cz database
+  - Export to CSV or JSON
+  - Extract structured nutrition data
+- **GitHub:** https://github.com/jimrs/kaloricketabulky-scraper
+- **Best for:** One-time bulk data extraction
+
+#### Typical Database Structure
+
+Based on community scrapers, kaloricketabulky.cz contains:
+
+**Food Items Table:**
+- Unique ID
+- Name (Czech)
+- Description
+- Brand/Manufacturer
+- Category
+
+**Nutrients per 100g:**
+- Calories (kcal)
+- Protein (g)
+- Carbohydrates (g)
+- Fat (g)
+- Fiber (g)
+- Sugar (g)
+- Sodium/Salt (g)
+- Additional vitamins/minerals (when available)
+
+**Additional Data:**
+- Serving sizes
+- User ratings/notes
+- Ingredient lists (for some products)
+
+#### API Endpoints (Reverse-Engineered)
+
+**Authentication:**
+```
+POST /api/login
+Body: { email, password_hash }
+Returns: Session cookies
+```
+
+**Weight Management:**
+```
+POST /api/weight/record
+GET /api/weight/recent
+```
+
+**Note:** Full nutrition database endpoints are not publicly documented
+
+#### Web Scraping Approach
+
+For accessing nutrition data:
+1. Navigate site structure (browse by category, search)
+2. Parse HTML for product listings
+3. Extract nutrition facts from product detail pages
+4. Map to standardized schema
+
+**Scraping Considerations:**
+- Respect robots.txt
+- Implement rate limiting (avoid overwhelming servers)
+- Cache results locally
+- Monitor for HTML structure changes
+- Consider legal/ethical implications
+
+#### Comparison with Alternatives
+
+**Advantages:**
+- ✅ Comprehensive Czech/Slovak food database
+- ✅ Local product coverage (brands, regional foods)
+- ✅ Czech language interface
+- ✅ Community trust and usage
+
+**Disadvantages:**
+- ❌ No official API
+- ❌ Terms of Service concerns
+- ❌ Requires reverse engineering or scraping
+- ❌ Brittle (breaks when site updates)
+- ❌ Authentication complexity
+- ❌ Limited Python support
+
+#### Recommendation
+
+**For This Project:**
+- **Not recommended as primary source** due to lack of official API
+- **Alternative:** Use Open Food Facts API which has better Czech/Slovak coverage than expected and an official API
+- **Consider:** Only if specific Czech products not in Open Food Facts
+- **If used:** Implement as fallback option with proper error handling
+
+**Python Integration Options:**
+1. Use jimrs/kaloricketabulky-scraper for bulk data extraction → import to local database
+2. Port TypeScript libraries to Python (requests + reverse-engineered endpoints)
+3. Use Node.js subprocess from Python (complex, not recommended)
+4. **Recommended:** Use Open Food Facts API instead
 
 ---
 

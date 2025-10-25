@@ -6,6 +6,8 @@
 
 **Recommendation:** Use **Open Food Facts API** as primary nutrition source instead. Open Food Facts has surprisingly good Czech/Slovak product coverage and provides an official, stable API. Use kaloricketabulky.cz only as a supplementary source for products not found in Open Food Facts.
 
+**For detailed information on web scraping libraries and alternatives, see [SCRAPING_ALTERNATIVES.md](SCRAPING_ALTERNATIVES.md).**
+
 ---
 
 ## Available Community Tools
@@ -101,6 +103,18 @@ npm i francbohuslav/kaloricke-tabulky-api
 **Type:** Python web scraper
 
 **Purpose:** Extract the entire nutrition database from kaloricketabulky.cz
+
+**Technology Stack:**
+- **BeautifulSoup4** - HTML parsing
+- **requests** - HTTP requests
+- **lxml** - Fast XML/HTML parser (likely)
+- **Python 3.x** - Core language
+
+**Why This Stack:**
+- kaloricketabulky.cz is mostly static HTML
+- No heavy JavaScript rendering required
+- BeautifulSoup handles Czech characters well
+- Fast and reliable for bulk scraping
 
 **Features:**
 - Scrapes complete food database
@@ -485,6 +499,30 @@ python import_to_db.py foods.json
 
 ---
 
+## Web Scraping Alternatives
+
+For detailed comparison of web scraping libraries for both Python and C#, see **[SCRAPING_ALTERNATIVES.md](SCRAPING_ALTERNATIVES.md)**.
+
+### Quick Summary
+
+**Python Libraries:**
+- **BeautifulSoup + requests** - What jimrs/kaloricketabulky-scraper likely uses
+- **Scrapy** - For large-scale production scraping
+- **Selenium** - For JavaScript-heavy sites (slower)
+- **Playwright** - Modern alternative to Selenium (faster)
+
+**C# Libraries:**
+- **HtmlAgilityPack** - Forgiving HTML parser (like BeautifulSoup)
+- **AngleSharp** - Modern HTML5-compliant parser
+- **Puppeteer Sharp** - Browser automation (.NET port of Puppeteer)
+- **Selenium WebDriver** - Cross-browser automation
+
+**For kaloricketabulky.cz:**
+- **Recommended:** BeautifulSoup (Python) or AngleSharp (C#) for static content
+- **Only if needed:** Playwright or Puppeteer Sharp for dynamic content
+
+---
+
 ## References
 
 - TomasHubelbauer API: https://github.com/TomasHubelbauer/kaloricke-tabulky-api
@@ -492,3 +530,4 @@ python import_to_db.py foods.json
 - jimrs Scraper: https://github.com/jimrs/kaloricketabulky-scraper
 - Open Food Facts: https://world.openfoodfacts.org/data
 - USDA FoodData Central: https://fdc.nal.usda.gov/
+- Web Scraping Alternatives: [SCRAPING_ALTERNATIVES.md](SCRAPING_ALTERNATIVES.md)

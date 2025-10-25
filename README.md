@@ -192,24 +192,93 @@ The modular design allows easy extension:
 3. **New databases**: Add new database models in `foodler/database/`
 4. **CLI commands**: Add new commands in `foodler/cli.py`
 
+## API Integrations ⭐ NEW!
+
+The application now integrates with multiple APIs for comprehensive nutrition data and discount information:
+
+### Nutrition Data APIs
+
+#### 1. Open Food Facts (Primary - Recommended)
+- **Free & Open Source** - No API key required
+- **Global Coverage** - 4+ million products from 150+ countries
+- **Czech/Slovak Products** - Excellent coverage of local products
+- **Features**: Nutrition data, ingredients, allergens, Nutri-Score, barcode scanning
+
+**Example Usage:**
+```python
+from foodler.scrapers import OpenFoodFactsAPI
+
+api = OpenFoodFactsAPI()
+nutrition = api.get_nutrition_info("banán", country='cz')
+print(f"Calories: {nutrition['calories']} kcal/100g")
+```
+
+#### 2. USDA FoodData Central (Secondary - Optional)
+- **Free** - Requires API key from https://fdc.nal.usda.gov/
+- **300,000+ Foods** - Comprehensive US food database
+- **Detailed Nutrients** - Extensive vitamin and mineral data
+- Set API key: `export USDA_API_KEY='your-key-here'`
+
+**Combined Multi-Source Usage:**
+```python
+from foodler.scrapers import NutritionScraper
+
+scraper = NutritionScraper(usda_api_key='your-key', country_code='cz')
+nutrition = scraper.get_nutrition_info("chicken breast")  # Auto tries multiple sources
+```
+
+### Discount Data API
+
+#### Kupi.cz Integration (via kupiapi)
+- **Free** - Open-source Python library
+- **Czech Market** - All major retailers (Tesco, Lidl, Kaufland, Albert, Billa)
+- **Features**: Current discounts, search, category filtering, store filtering
+
+**Example Usage:**
+```python
+from foodler.scrapers import KupiScraper
+
+scraper = KupiScraper()
+discounts = scraper.get_discounts(category='potraviny')
+chicken_deals = scraper.search_product('kuřecí')
+best_deals = scraper.get_best_deals(limit=10)
+```
+
+### API Examples
+
+See `api_examples.py` for comprehensive usage examples:
+```bash
+python api_examples.py        # List all examples
+python api_examples.py 1      # Run specific example
+```
+
+For detailed API research and recommendations, see [API_RESEARCH.md](API_RESEARCH.md).
+
 ## Note on Web Scraping
 
-The scraper implementations include placeholder code that needs to be adapted based on the actual HTML structure of the target websites (kupi.cz and kaloricke tabulky). Web scraping should be done responsibly:
+The application now primarily uses official and community-maintained APIs instead of web scraping:
 
-- Respect robots.txt
-- Implement rate limiting
+- **Open Food Facts API**: Official API, no scraping needed
+- **USDA FoodData Central**: Official government API
+- **Kupi.cz**: Uses `kupiapi` library (maintained scraper)
+
+API usage best practices:
+- Respect rate limits
 - Cache results when appropriate
 - Handle errors gracefully
-- Consider using official APIs when available
+- Set appropriate User-Agent headers
+- Store API keys securely (environment variables)
 
 ## Future Enhancements
 
+- [x] API integration for nutrition data (Open Food Facts, USDA)
+- [x] API integration for discounts (kupiapi)
+- [x] Barcode scanning support (via Open Food Facts)
 - [ ] Web UI using Flask or Django
 - [ ] Meal planning with AI recommendations
 - [ ] Recipe suggestions based on available ingredients
 - [ ] Integration with more discount portals
 - [ ] Mobile app version
-- [ ] Barcode scanning for easy item entry
 - [ ] Data visualization and reporting
 - [ ] Multi-user support
 

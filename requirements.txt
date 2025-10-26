@@ -3,6 +3,9 @@ requests>=2.31.0
 beautifulsoup4>=4.12.0
 lxml>=4.9.0
 
+# API integrations
+kupiapi>=0.1.0  # Kupi.cz discount scraper
+
 # Database
 sqlalchemy>=2.0.0
 

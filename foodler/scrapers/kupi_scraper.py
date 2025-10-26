@@ -1,21 +1,33 @@
-"""Scraper for kupi.cz food discount portal."""
+"""Scraper for kupi.cz food discount portal using kupiapi library."""
 
-import requests
-from bs4 import BeautifulSoup
 from typing import List, Dict, Optional
+import logging
+
+try:
+    from kupiapi.scraper import KupiScraper as KupiApiScraper
+    KUPIAPI_AVAILABLE = True
+except ImportError:
+    KUPIAPI_AVAILABLE = False
+    logging.warning(
+        "kupiapi library not installed. "
+        "Install with: pip install kupiapi"
+    )
+
+logger = logging.getLogger(__name__)
 
 
 class KupiScraper:
-    """Scrapes food discounts from kupi.cz."""
-    
-    BASE_URL = "https://www.kupi.cz"
+    """Scrapes food discounts from kupi.cz using kupiapi library."""
     
     def __init__(self):
-        """Initialize the scraper with a session."""
-        self.session = requests.Session()
-        self.session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-        })
+        """Initialize the scraper."""
+        if not KUPIAPI_AVAILABLE:
+            raise ImportError(
+                "kupiapi library is required. Install with: pip install kupiapi"
+            )
+        
+        self.kupi = KupiApiScraper()
+        logger.info("KupiScraper initialized with kupiapi library")
     
     def get_discounts(self, category: Optional[str] = None) -> List[Dict[str, str]]:
         """Fetch current food discounts.
@@ -32,42 +44,37 @@ class KupiScraper:
             - store: Store name
             - valid_until: Validity date
         """
-        discounts = []
-        
         try:
-            # Note: This is a placeholder implementation
-            # Actual implementation would require analysis of kupi.cz structure
-            # and proper scraping logic
-            
-            url = self.BASE_URL
             if category:
-                url = f"{url}/{category}"
+                discounts = self.kupi.get_discounts_by_category(category)
+            else:
+                # Default to food category
+                discounts = self.kupi.get_discounts_by_category('potraviny')
             
-            response = self.session.get(url, timeout=10)
-            response.raise_for_status()
+            logger.info(f"Fetched {len(discounts)} discounts from kupi.cz")
+            return discounts
             
-            soup = BeautifulSoup(response.content, 'lxml')
-            
-            # Placeholder: Parse discount items from the page
-            # This would need to be adapted based on actual site structure
-            # discount_elements = soup.find_all('div', class_='discount-item')
-            
-            # Example structure (to be implemented with actual HTML selectors):
-            # for element in discount_elements:
-            #     discount = {
-            #         'name': element.find('span', class_='product-name').text.strip(),
-            #         'price': element.find('span', class_='price').text.strip(),
-            #         'original_price': element.find('span', class_='original-price').text.strip(),
-            #         'discount': element.find('span', class_='discount').text.strip(),
-            #         'store': element.find('span', class_='store').text.strip(),
-            #         'valid_until': element.find('span', class_='validity').text.strip()
-            #     }
-            #     discounts.append(discount)
-            
-        except requests.RequestException as e:
-            print(f"Error fetching discounts: {e}")
+        except Exception as e:
+            logger.error(f"Error fetching discounts from kupi.cz: {e}")
+            return []
+    
+    def get_discounts_by_shop(self, shop_name: str) -> List[Dict[str, str]]:
+        """Get discounts for a specific shop.
         
-        return discounts
+        Args:
+            shop_name: Shop name (e.g., 'tesco', 'lidl', 'kaufland', 'albert', 'billa')
+            
+        Returns:
+            List of discounts from the specified shop
+        """
+        try:
+            discounts = self.kupi.get_discounts_by_shop(shop_name.lower())
+            logger.info(f"Fetched {len(discounts)} discounts from {shop_name}")
+            return discounts
+            
+        except Exception as e:
+            logger.error(f"Error fetching discounts from {shop_name}: {e}")
+            return []
     
     def search_product(self, product_name: str) -> List[Dict[str, str]]:
         """Search for specific product discounts.
@@ -78,15 +85,14 @@ class KupiScraper:
         Returns:
             List of matching discounts
         """
-        all_discounts = self.get_discounts()
-        
-        # Filter discounts by product name
-        matching = [
-            d for d in all_discounts 
-            if product_name.lower() in d.get('name', '').lower()
-        ]
-        
-        return matching
+        try:
+            discounts = self.kupi.search_discounts(product_name)
+            logger.info(f"Found {len(discounts)} discounts matching '{product_name}'")
+            return discounts
+            
+        except Exception as e:
+            logger.error(f"Error searching for '{product_name}': {e}")
+            return []
     
     def get_best_deals(self, limit: int = 10) -> List[Dict[str, str]]:
         """Get the best current deals sorted by discount percentage.
@@ -95,17 +101,44 @@ class KupiScraper:
             limit: Maximum number of deals to return
             
         Returns:
-            List of top discounts
+            List of top discounts sorted by discount percentage
         """
         discounts = self.get_discounts()
         
-        # Sort by discount percentage (assuming format like "50%")
+        if not discounts:
+            return []
+        
+        # Sort by discount percentage
         try:
             sorted_discounts = sorted(
                 discounts,
-                key=lambda x: float(x.get('discount', '0').replace('%', '')),
+                key=lambda x: self._extract_discount_percent(x),
                 reverse=True
             )
-            return sorted_discounts[:limit]
-        except (ValueError, AttributeError):
+            result = sorted_discounts[:limit]
+            logger.info(f"Returning top {len(result)} deals")
+            return result
+            
+        except Exception as e:
+            logger.error(f"Error sorting discounts: {e}")
             return discounts[:limit]
+    
+    @staticmethod
+    def _extract_discount_percent(discount: Dict[str, str]) -> float:
+        """Extract discount percentage from discount data.
+        
+        Args:
+            discount: Discount dictionary
+            
+        Returns:
+            Discount percentage as float
+        """
+        # Try different possible keys for discount percentage
+        discount_str = discount.get('discount', discount.get('discount_percent', '0%'))
+        
+        try:
+            # Remove '%' and any other non-numeric characters except '.' and '-'
+            cleaned = ''.join(c for c in str(discount_str) if c.isdigit() or c in '.-')
+            return float(cleaned) if cleaned else 0.0
+        except (ValueError, AttributeError):
+            return 0.0

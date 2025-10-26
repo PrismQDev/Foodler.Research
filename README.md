@@ -254,6 +254,8 @@ python api_examples.py 1      # Run specific example
 
 For detailed API research and recommendations, see [API_RESEARCH.md](API_RESEARCH.md).
 
+For alternatives to web scraping tools (like jimrs/kaloricketabulky-scraper), see [JIMRS_ALTERNATIVES.md](JIMRS_ALTERNATIVES.md).
+
 ## Note on Web Scraping
 
 The application now primarily uses official and community-maintained APIs instead of web scraping:
